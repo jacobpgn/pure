@@ -28,7 +28,7 @@
 # 165392 => 1d 21h 56m 32s
 # https://github.com/sindresorhus/pretty-time-zsh
 prompt_pure_human_time_to_var() {
-	local human=" " total_seconds=$1 var=$2
+	local human="" total_seconds=$1 var=$2
 	local days=$(( total_seconds / 60 / 60 / 24 ))
 	local hours=$(( total_seconds / 60 / 60 % 24 ))
 	local minutes=$(( total_seconds / 60 % 60 ))
@@ -36,7 +36,7 @@ prompt_pure_human_time_to_var() {
 	(( days > 0 )) && human+="${days}d "
 	(( hours > 0 )) && human+="${hours}h "
 	(( minutes > 0 )) && human+="${minutes}m "
-	human+="${seconds}s"
+	human+="${seconds}s "
 
 	# store human readable time in variable as specified by caller
 	typeset -g "${var}"="${human}"
@@ -47,7 +47,7 @@ prompt_pure_check_cmd_exec_time() {
 	integer elapsed
 	(( elapsed = EPOCHSECONDS - ${prompt_pure_cmd_timestamp:-$EPOCHSECONDS} ))
 	prompt_pure_cmd_exec_time=
-	(( elapsed > ${PURE_CMD_MAX_EXEC_TIME:=5} )) && {
+	(( elapsed > ${PURE_CMD_MAX_EXEC_TIME:=3} )) && {
 		prompt_pure_human_time_to_var $elapsed "prompt_pure_cmd_exec_time"
 	}
 }
@@ -133,16 +133,16 @@ prompt_pure_preprompt_render() {
 	local git_color=242
 	[[ -n ${prompt_pure_git_last_dirty_check_timestamp+x} ]] && git_color=red
 
-	# construct preprompt, beginning with path
-	local preprompt="%F{blue}%~%f"
+	# construct preprompt, beginning with previous execution time
+	local preprompt="%F{yellow}${prompt_pure_cmd_exec_time}%f"
+	# path
+	preprompt+="%F{blue}%~%f"
 	# git info
 	preprompt+="%F{$git_color}${vcs_info_msg_0_}${prompt_pure_git_dirty}%f"
 	# git pull/push arrows
 	preprompt+="%F{cyan}${prompt_pure_git_arrows}%f"
 	# username and machine if applicable
 	preprompt+=$prompt_pure_username
-	# execution time
-	preprompt+="%F{yellow}${prompt_pure_cmd_exec_time}%f"
 
 	# make sure prompt_pure_last_preprompt is a global array
 	typeset -g -a prompt_pure_last_preprompt
